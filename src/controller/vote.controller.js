@@ -11,14 +11,14 @@ const submitVote = async (req, res) => {
     const ipAddress = getIP(req);
     const userAgent = req.headers["user-agent"];
 
-    // 🚨 RATE LIMIT CHECK
+    // RATE LIMIT CHECK
     if (!canVote(ipAddress)) {
       return res.status(429).json({
         message: "Too many requests. Please wait a few seconds."
       });
     }
 
-    // Existing vote protection (production only)
+    // 
     if (process.env.NODE_ENV === "production") {
       const existing = await Vote.findOne({ pollId, ipAddress });
       if (existing) {
