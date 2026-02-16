@@ -1,12 +1,12 @@
-
-import Poll from "../models/poll"
-import Vote from "../models/vote"
-import getIP from "../utils/getIp"
-import { getIO } from "../config/socket";
+import Poll from "../models/poll.js";
+import Vote from "../models/vote.js";
+import getIP from "../utils/getIp.js";
+import { getIO } from "../config/socket.js";
 
 const submitVote = async (req, res) => {
   try {
-    const { pollId, optionIds } = req.body;
+    const { pollId, optionId } = req.body;
+
     const ipAddress = getIP(req);
     const userAgent = req.headers["user-agent"];
 
@@ -18,17 +18,15 @@ const submitVote = async (req, res) => {
 
     await Vote.create({
       pollId,
+      optionId,
       ipAddress,
       userAgent,
-      optionIds,
     });
 
     const poll = await Poll.findById(pollId);
 
-    optionIds.forEach((id) => {
-      const opt = poll.options.id(id);
-      if (opt) opt.voteCount++;
-    });
+    const opt = poll.options.id(optionId);
+    if (opt) opt.voteCount++;
 
     await poll.save();
 
@@ -40,4 +38,5 @@ const submitVote = async (req, res) => {
     res.status(500).json({ message: "Error submitting vote" });
   }
 };
-export default submitVote ;
+
+export default submitVote;
