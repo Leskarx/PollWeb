@@ -1,7 +1,8 @@
-import Poll from "../models/poll.js";
-import Vote from "../models/vote.js";
+import canVote from "../utils/rateLimiter.js";
 import getIP from "../utils/getIp.js";
 import { getIO } from "../config/socket.js";
+import Poll from "../models/poll.js";
+import Vote from "../models/vote.js";
 
 const submitVote = async (req, res) => {
   try {
@@ -10,14 +11,20 @@ const submitVote = async (req, res) => {
     const ipAddress = getIP(req);
     const userAgent = req.headers["user-agent"];
 
-    // Skip in development
+    // 🚨 RATE LIMIT CHECK
+    if (!canVote(ipAddress)) {
+      return res.status(429).json({
+        message: "Too many requests. Please wait a few seconds."
+      });
+    }
+
+    // Existing vote protection (production only)
     if (process.env.NODE_ENV === "production") {
-        const existing = await Vote.findOne({ pollId, ipAddress });
-  
-        if (existing) {
-          return res.status(400).json({ message: "Already voted" });
-        }
+      const existing = await Vote.findOne({ pollId, ipAddress });
+      if (existing) {
+        return res.status(400).json({ message: "Already voted" });
       }
+    }
 
     await Vote.create({
       pollId,
@@ -37,6 +44,7 @@ const submitVote = async (req, res) => {
     io.to(`poll_${pollId}`).emit("vote_update", poll.options);
 
     res.json({ message: "Vote submitted" });
+
   } catch (err) {
     res.status(500).json({ message: "Error submitting vote" });
   }
