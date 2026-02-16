@@ -10,7 +10,9 @@ const initSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
+    // console.log("Client connected:", socket.id);
     socket.on("join_poll", (pollId) => {
+      // console.log("Joined room:", pollId);
       socket.join(`poll_${pollId}`);
     });
   });

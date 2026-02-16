@@ -10,11 +10,14 @@ const submitVote = async (req, res) => {
     const ipAddress = getIP(req);
     const userAgent = req.headers["user-agent"];
 
-    const existing = await Vote.findOne({ pollId, ipAddress });
-
-    if (existing) {
-      return res.status(400).json({ message: "Already voted" });
-    }
+    // Skip in development
+    if (process.env.NODE_ENV === "production") {
+        const existing = await Vote.findOne({ pollId, ipAddress });
+  
+        if (existing) {
+          return res.status(400).json({ message: "Already voted" });
+        }
+      }
 
     await Vote.create({
       pollId,
