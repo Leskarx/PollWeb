@@ -1,7 +1,8 @@
 // const Poll = require("../models/Poll");
-import Poll from "../models/poll";
+import Poll from "../models/poll.js";
+import mongoose from "mongoose";
 
-createPoll = async (req, res) => {
+const createPoll = async (req, res) => {
   try {
     const { question, options} = req.body;
 
@@ -24,8 +25,13 @@ createPoll = async (req, res) => {
   }
 };
 
-getPoll = async (req, res) => {
-  const poll = await Poll.findById(req.params.id);
+const getPoll = async (req, res) => {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+        return res.status(400).json({ message: "Invalid poll ID" });
+      }
+
+  const poll = await Poll.findById(id);
   if (!poll) return res.status(404).json({ message: "Poll not found" });
 
   res.json(poll);
