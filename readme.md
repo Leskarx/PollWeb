@@ -1,27 +1,24 @@
 # Real-Time Poll Rooms
 
-A full-stack web application that allows users to create polls, share them via a link, collect votes, and see results update in real time. Built as a complete working product with fairness controls, persistent storage, and live updates.
+A simple web app where anyone can create a poll, share a link, and watch votes update live.
+Built as a full-stack assignment project to demonstrate real-time systems, backend design, and deployment.
+
+**Live demo:** https://leskar-pollweb.vercel.app/
+**Backend health check:** https://pollweb.onrender.com/health
 
 ---
 
-## 🌐 Live Demo
+## 🧩 What this app does
 
-* **Frontend URL:** [text](https://leskar-pollweb.vercel.app/)
-* **Backend URL:** [text](https://pollweb.onrender.com/health)
+The idea is straightforward:
 
----
+* Create a poll (question + at least 2 options)
+* Get a shareable link
+* Send it to others
+* People vote once
+* Results update instantly for everyone watching
 
-## 📌 Objective
-
-This project was built to fulfill the Full-Stack Assignment: **Real-Time Poll Rooms**.
-
-Users can:
-
-* Create a poll with multiple options
-* Share the poll via a unique link
-* Vote once per poll
-* See live result updates instantly
-* Access the poll later (persistent storage)
+Polls and votes are stored in the database, so refreshing or coming back later doesn’t reset anything.
 
 ---
 
@@ -31,185 +28,129 @@ Users can:
 
 * React (Vite)
 * Tailwind CSS
-* Socket.IO Client
+* Socket.IO client
 * Axios
 
 ### Backend
 
-* Node.js
-* Express.js
+* Node.js + Express
 * MongoDB (Mongoose)
 * Socket.IO
-* Rate limiting middleware
+* Custom rate limiting
 
-### Deployment
+### Hosting
 
 * Frontend: Vercel
-* Backend: Render
+* Backend: Render (free tier)
 * Database: MongoDB Atlas
 
----
-
-## ✨ Features
-
-### 1. Poll Creation
-
-* Users can create a poll with:
-
-  * A question
-  * At least 2 options
-* Generates a unique shareable link:
-
-  ```
-  /poll/:pollId
-  ```
-
-### 2. Join by Link
-
-* Anyone with the link can:
-
-  * View the poll
-  * Vote for one option (single-choice)
-
-### 3. Real-Time Results
-
-* When a vote is submitted:
-
-  * Results update instantly for all viewers
-  * Achieved using Socket.IO rooms
-
-### 4. Persistent Storage
-
-* Polls and votes are stored in MongoDB
-* Refreshing the page does NOT lose data
-* Share link works later
-
-### 5. Smooth UX
-
-* Loading skeletons
-* Progress bar animations
-* Toast notifications
-* Instant UI updates after voting
+Note: Since the backend is on Render’s free tier, it may take a few seconds to wake up after inactivity.
 
 ---
 
-## 🛡 Fairness / Anti-Abuse Mechanisms
+## ✅ Features
 
-Multiple layers were implemented to reduce repeat and abusive voting:
+### Create a poll
 
-### 1) IP-Based Voting Restriction
+Enter a question, add options, and generate a shareable link instantly.
 
-* Each vote stores the client IP address.
-* Only one vote is allowed per IP per poll.
-* Prevents:
+### Vote via link
 
-  * Refresh spamming
-  * Basic repeat voting
+Open the poll link, select one option, and submit your vote. No login required.
 
-### 2) Database-Level Protection (Unique Index)
+### Real-time results
 
-A compound index ensures:
+When someone votes, everyone currently viewing the poll sees the results update immediately.
+This is handled using Socket.IO rooms.
 
-```
-pollId + ipAddress = unique
-```
+### Persistent data
 
-This prevents:
+Polls and votes are stored in MongoDB.
+You can refresh, close the tab, or revisit later — everything stays intact.
 
-* Double voting due to race conditions
-* Multiple requests hitting server simultaneously
-* Duplicate submissions
+### Basic fairness protections
 
-### 3) Rate Limiting
+The app includes multiple checks to reduce repeat voting:
 
-Limits how frequently a user can send requests:
-
-* Prevents bot attacks
-* Prevents request flooding
-* Protects server stability
-
-### 4) Browser Lock (Frontend)
-
-After voting:
-
-```
-localStorage.setItem("poll_<id>_voted", true)
-```
-
-Prevents:
-
-* Easy repeat voting from the same browser
+* IP-based restriction (one vote per IP per poll)
+* Database constraint to prevent duplicate entries
+* Rate limiting to stop request spam
+* localStorage flag to avoid repeat attempts from the same browser
 
 ---
 
 ## ⚠️ Limitations
 
-While strong protections exist, this is an anonymous system:
+This is an anonymous voting system, so it’s not completely cheat-proof. A few known limitations:
 
-* VPN users can change IP to vote again
-* Users on same WiFi share IP
-* No login/authentication layer
+* Someone using a VPN can change IP and vote again
+* No login system, so votes aren’t tied to identities
+* IP-based restriction can behave differently depending on network setup (mobile networks sometimes assign different public IPs)
+
+These were intentional trade-offs to keep the system simple and accessible.
+
+---
+
+## 🧪 Edge Cases Handled
+
+I tried to break the app in different ways and handled common scenarios:
+
+* Invalid or non-existent poll links → shows “Poll not found”
+* Voting without selecting an option → blocked on frontend
+* Double-clicking the vote button → button disables + server checks
+* Two votes hitting at the same moment → database unique index prevents duplicates
+* Refresh after voting → UI stays consistent using localStorage + backend validation
+* Real-time updates across multiple users → handled through Socket.IO
+
+---
+
+## 🔒 Fairness approach (how duplicate voting is reduced)
+
+To reduce abuse without forcing logins, I used a layered approach:
+
+1. **IP tracking**
+   Each vote stores the user’s IP address. If the same IP tries to vote again on the same poll, it’s rejected.
+
+2. **Database-level protection**
+   A unique index on `(pollId + ipAddress)` ensures duplicate votes can’t be inserted even during race conditions.
+
+3. **Rate limiting**
+   Prevents rapid repeated requests from the same IP.
+
+4. **Browser lock (localStorage)**
+   After voting, the browser remembers that the user already voted and switches directly to results view.
+
+---
+
+## 💭 If I had more time
+
+A few things I’d like to improve or add:
+
+* Poll expiry (auto close after a set time)
+* CAPTCHA to reduce automated voting
+* Multi-select polls
+* Optional login system for stronger fairness
+* Cleaner mobile UI polish
+* Basic analytics (total voters, activity over time)
+
+---
+
+## 🎯 Why I built it this way
+
+The goal was to show end-to-end full-stack capability:
+
+* Frontend UI + state management
+* Backend APIs
+* Database design
+* Real-time updates using sockets
+* Fairness logic
+* Deployment
+
+Instead of just making something that “works”, I focused on making it stable, handling edge cases, and thinking about how people might try to break it.
 
 
 ---
 
-## 🧠 Edge Cases Handled
-
-* Poll not found
-* Invalid poll link
-* Less than 2 options during creation
-* Voting without selecting an option
-* Duplicate vote attempts
-* Rate limit exceeded
-* Page refresh persistence
-* Real-time sync across multiple users
-
----
-
-## 🔄 Real-Time Architecture
-
-Flow:
-
-1. User submits vote
-2. Backend updates MongoDB
-3. Socket emits:
-
-   ```
-   vote_update
-   ```
-4. All users in that poll room receive live updates
-5. UI progress bars animate instantly
-
----
-
-## 📈 Future Improvements
-
-Possible enhancements:
-
-* Poll expiry time
-* User authentication
-* CAPTCHA for bot prevention
-* Multi-choice polls
-* Admin dashboard
-* Vote change support
-* Analytics panel
-
----
-
-## 🎯 What This Project Demonstrates
-
-* Full-stack development
-* Real-time systems using Socket.IO
-* Database schema design
-* Fairness & anti-abuse thinking
-* Edge-case handling
-* Deployment & production readiness
-
----
-
-## 👨‍💻 Author
+## 👨‍💻 Built by
 
 **Gouri Shankar Konwar**
-GitHub: https://github.com/leskarx
-
----
