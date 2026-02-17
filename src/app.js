@@ -9,15 +9,22 @@ import voteRouter from "./routes/vote.route.js";
 // const voteRoutes = require("./routes/vote.routes");
 
 const app = express();
+const allowedOrigins = [
+  process.env.FRONTEND_URL,             
+  'http://localhost:5173'                
+].filter(Boolean);
 
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins
+
+}));
 app.use(express.json());
 
 app.use("/api/polls", pollRouter);
 app.use("/api/vote", voteRouter);
 
 app.get("/health", (req, res) => {
-  res.send("Server running");
+  res.json({ status: "ok" });
 });
 
 export default app;

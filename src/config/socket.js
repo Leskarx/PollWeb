@@ -2,11 +2,17 @@ let io;
 import { Server } from "socket.io";
 
 const initSocket = (server) => {
+  const allowedOrigins = [
+    process.env.FRONTEND_URL,
+    'http://localhost:5173',
+  ].filter(Boolean);
 
   io = new Server(server, {
     cors: {
-      origin: "*",
+      origin: allowedOrigins,
+     
     },
+    transports: ['websocket', 'polling']
   });
 
   io.on("connection", (socket) => {
