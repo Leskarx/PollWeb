@@ -11,7 +11,7 @@ const submitVote = async (req, res) => {
     const ipAddress = getIP(req);
     const userAgent = req.headers["user-agent"];
 
-    // RATE LIMIT CHECK
+    // implemented rate LIMIT
     if (!canVote(ipAddress)) {
       return res.status(429).json({
         message: "Too many requests. Please wait a few seconds."
