@@ -12,7 +12,9 @@ const voteSchema = new mongoose.Schema({
   },
   ipAddress: String,
   userAgent: String
-},{timestamps: true});
+}, { timestamps: true });
+
+voteSchema.index({ pollId: 1, ipAddress: 1 }, { unique: true });
 
 const Vote = mongoose.model("Vote", voteSchema);
 export default Vote;
