@@ -1,10 +1,20 @@
 # Real-Time Poll Rooms
 
 A simple web app where anyone can create a poll, share a link, and watch votes update live.
-Built as a full-stack assignment project to demonstrate real-time systems, backend design, and deployment.
+Built as a full-stack assignment project to demonstrate real-time systems, backend design, fairness handling, and deployment.
 
-**Live demo:** https://leskar-pollweb.vercel.app/
-**Backend health check:** https://pollweb.onrender.com/health
+---
+
+## 🔗 Project Links
+
+**Live App:**
+https://leskar-pollweb.vercel.app/
+
+**Backend Health:**
+https://pollweb.onrender.com/health
+
+**GitHub:**
+https://github.com/leskarx
 
 ---
 
@@ -68,70 +78,63 @@ This is handled using Socket.IO rooms.
 Polls and votes are stored in MongoDB.
 You can refresh, close the tab, or revisit later — everything stays intact.
 
-### Basic fairness protections
-
-The app includes multiple checks to reduce repeat voting:
-
-* IP-based restriction (one vote per IP per poll)
-* Database constraint to prevent duplicate entries
-* Rate limiting to stop request spam
-* localStorage flag to avoid repeat attempts from the same browser
-
 ---
 
-## ⚠️ Limitations
+## 🔒 Fairness / Anti-Abuse Approach
 
-This is an anonymous voting system, so it’s not completely cheat-proof. A few known limitations:
+Since this is an anonymous voting system, I added multiple layers to reduce repeat voting:
 
-* Someone using a VPN can change IP and vote again
-* No login system, so votes aren’t tied to identities
-* IP-based restriction can behave differently depending on network setup (mobile networks sometimes assign different public IPs)
+* **IP-based restriction:**
+  Each vote stores the client IP. Only one vote per IP per poll is allowed.
 
-These were intentional trade-offs to keep the system simple and accessible.
+* **Database-level protection:**
+  A unique index on `(pollId + ipAddress)` prevents duplicate entries even if two requests hit at the same time.
+
+* **Rate limiting:**
+  Stops rapid repeated requests and protects the server from spam.
+
+* **Browser lock (localStorage):**
+  After voting, the browser stores a flag so the user is shown results instead of voting again.
+
+This doesn’t make the system perfect, but it makes casual abuse much harder while keeping the experience simple and anonymous.
 
 ---
 
 ## 🧪 Edge Cases Handled
 
-I tried to break the app in different ways and handled common scenarios:
+Some scenarios I tested and handled:
 
 * Invalid or non-existent poll links → shows “Poll not found”
 * Voting without selecting an option → blocked on frontend
-* Double-clicking the vote button → button disables + server checks
-* Two votes hitting at the same moment → database unique index prevents duplicates
-* Refresh after voting → UI stays consistent using localStorage + backend validation
-* Real-time updates across multiple users → handled through Socket.IO
+* Double-clicking the vote button → button disables + backend checks
+* Two votes at the same moment → database unique index prevents duplicates
+* Refresh after voting → UI stays correct using localStorage + backend validation
+* Multiple users watching the same poll → results stay in sync in real time
 
 ---
 
-## 🔒 Fairness approach (how duplicate voting is reduced)
+## ⚠️ Known Limitations
 
-To reduce abuse without forcing logins, I used a layered approach:
+This project intentionally keeps voting anonymous, so a few trade-offs exist:
 
-1. **IP tracking**
-   Each vote stores the user’s IP address. If the same IP tries to vote again on the same poll, it’s rejected.
+* Users using VPNs or switching networks can bypass IP-based restrictions
+* No authentication system, so votes aren’t tied to identities
+* Mobile networks sometimes assign different public IPs per device/request
 
-2. **Database-level protection**
-   A unique index on `(pollId + ipAddress)` ensures duplicate votes can’t be inserted even during race conditions.
-
-3. **Rate limiting**
-   Prevents rapid repeated requests from the same IP.
-
-4. **Browser lock (localStorage)**
-   After voting, the browser remembers that the user already voted and switches directly to results view.
+These are acceptable limitations for a lightweight, no-login poll system.
 
 ---
 
 ## 💭 If I had more time
 
-A few things I’d like to improve or add:
+A few improvements I’d explore next:
 
 * Poll expiry (auto close after a set time)
-* CAPTCHA to reduce automated voting
+* CAPTCHA for stronger bot protection
 * Multi-select polls
-* Optional login system for stronger fairness
+* Optional login system for stricter fairness
 * Cleaner mobile UI polish
-* Basic analytics (total voters, activity over time)
+* Basic analytics (total voters, activity trends)
 
 ---
 
@@ -139,15 +142,14 @@ A few things I’d like to improve or add:
 
 The goal was to show end-to-end full-stack capability:
 
-* Frontend UI + state management
+* Frontend UI + state handling
 * Backend APIs
 * Database design
 * Real-time updates using sockets
 * Fairness logic
 * Deployment
 
-Instead of just making something that “works”, I focused on making it stable, handling edge cases, and thinking about how people might try to break it.
-
+Instead of only focusing on features, I tried to think about edge cases and how users might try to misuse the system, then added simple protections around that.
 
 ---
 
